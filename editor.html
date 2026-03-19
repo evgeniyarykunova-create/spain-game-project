@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактор игры "Будни эмигранта"</title>
+    <style>
+        :root { --red: #aa151b; --gold: #ffcc00; --dark: #0a0a0f; --panel: #1e1e2e; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        .sidebar { width: 550px; background: var(--panel); padding: 20px; overflow-y: auto; border-right: 3px solid var(--gold); }
+        .section { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid var(--red); }
+        .m-card { background: #2a2a45; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444; }
+        .s-card { background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid #666; }
+        
+        .opt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .opt-row input[type="radio"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--gold); }
+
+        h2 { font-size: 13px; color: var(--gold); text-transform: uppercase; margin: 0 0 10px 0; }
+        label { display: block; font-size: 10px; opacity: 0.6; margin: 8px 0 3px 0; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #333; background: #000; color: #fff; font-size: 12px; box-sizing: border-box; }
+        
+        .btn-add { background: #2980b9; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; border-radius: 6px; font-weight: bold; margin-top: 10px; }
+        .btn-gen { background: var(--red); color: white; border: 2px solid var(--gold); padding: 16px; width: 100%; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 10px; margin-top: 20px; }
+        .del { float: right; color: #ff4d4d; cursor: pointer; font-size: 11px; background: none; border: none; }
+
+        .preview-cont { flex-grow: 1; display: flex; flex-direction: column; }
+        .pre-nav { background: #111; padding: 10px; display: flex; gap: 10px; border-bottom: 1px solid #333; }
+        .nav-btn { background: #333; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .nav-btn.active { background: var(--gold); color: black; font-weight: bold; }
+        iframe { width: 100%; flex-grow: 1; border: none; background: #000; }
+        #out-code { width: 100%; height: 50px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="section">
+        <h2>🏠 Начальный и Финальный экраны</h2>
+        <label>Заголовок игры</label>
+        <input type="text" id="cfg-title" value="¡Vivir en España!" oninput="upd()">
+        <label>Текст в облачке (Старт)</label>
+        <textarea id="cfg-start-text" oninput="upd()">Hola. Es mi primer mes en España. Ayúdame a resolver todos mis problemas.</textarea>
+        <label>Текст в облачке (Победа)</label>
+        <textarea id="cfg-win-text" oninput="upd()">¡ENHORABUENA! Has completado todas las misiones. ¡Ahora estás listo!</textarea>
+        
+        <label>Персонаж (URL)</label>
+        <input type="text" id="cfg-char" value="https://files.catbox.moe/f07un0.png" oninput="upd()">
+        <label>Карта (URL)</label>
+        <input type="text" id="cfg-map" value="https://files.catbox.moe/7h98v9.png" oninput="upd()">
+        <label>Мысли на карте</label>
+        <input type="text" id="cfg-map-thought" value="¿A dónde iremos hoy?" oninput="upd()">
+    </div>
+
+    <div id="m-list"></div>
+    <button class="btn-add" style="background:#27ae60" onclick="addM()">+ Добавить Здание</button>
+    <button class="btn-gen" onclick="gen()">СГЕНЕРИРОВАТЬ КОД</button>
+    <textarea id="out-code" readonly></textarea>
+</div>
+
+<div class="preview-cont">
+    <div class="pre-nav">
+        <button id="btn-edit-mode" class="nav-btn active" onclick="setMode('edit')">РЕЖИМ РЕДАКТИРОВАНИЯ (Карта)</button>
+        <button id="btn-play-mode" class="nav-btn" onclick="setMode('play')">ТЕСТ С НАЧАЛА (Кнопка старт)</button>
+    </div>
+    <iframe id="pre"></iframe>
+</div>
+
+<script>
+    let previewMode = 'edit';
+    let data = [{
+        name: "Farmacia", icon: "https://cdn-icons-png.flaticon.com/512/4320/4320337.png", x: 45, y: 40, 
+        bg: "https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000",
+        thought: "Me duele la cabeza...",
+        subs: [{ title: "Gripe", q: "¿Qué medicina comprar?", opts: ["Ibuprofeno", "Pan", "Agua"], corr: 0, ok: "¡Excelente!", bg: "" }]
+    }];
+
+    function setMode(m) {
+        previewMode = m;
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-'+m+'-mode').classList.add('active');
+        upd();
+    }
+
+    function addM() {
+        data.push({ name: "Nueva", icon: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png", x: 50, y: 50, bg: "", thought: "...", subs: [] });
+        render(); upd();
+    }
+
+    function addS(i) {
+        data[i].subs.push({ title: "Task", q: "Question?", opts: ["Opt 1", "Opt 2", "Opt 3"], corr: 0, ok: "Perfect!", bg: "" });
+        render(); upd();
+    }
+
+    function render() {
+        const cont = document.getElementById('m-list'); cont.innerHTML = '';
+        data.forEach((m, i) => {
+            let sHtml = m.subs.map((s, si) => `
+                <div class="s-card">
+                    <button class="del" onclick="data[${i}].subs.splice(${si},1); render(); upd()">[X]</button>
+                    <input type="text" value="${s.title}" oninput="data[${i}].subs[${si}].title=this.value; upd()" placeholder="Заголовок">
+                    <textarea oninput="data[${i}].subs[${si}].q=this.value; upd()">${s.q}</textarea>
+                    ${[0,1,2].map(num => `
+                        <div class="opt-row">
+                            <input type="radio" name="corr_${i}_${si}" ${s.corr === num ? 'checked' : ''} onchange="data[${i}].subs[${si}].corr=${num}; upd()">
+                            <input type="text" value="${s.opts[num] || ''}" oninput="data[${i}].subs[${si}].opts[${num}]=this.value; upd()">
+                        </div>`).join('')}
+                </div>`).join('');
+            cont.innerHTML += `<div class="m-card">
+                <button class="del" onclick="data.splice(${i},1); render(); upd()">Удалить миссию</button>
+                <div style="display:flex; gap:5px;"><input type="text" value="${m.name}" oninput="data[${i}].name=this.value; upd()"><input type="text" value="${m.icon}" oninput="data[${i}].icon=this.value; upd()"></div>
+                <div style="display:flex; gap:5px; margin-top:5px"><input type="number" value="${m.x}" oninput="data[${i}].x=this.value; upd()"><input type="number" value="${m.y}" oninput="data[${i}].y=this.value; upd()"></div>
+                <label>Фон (Full Screen URL)</label>
+                <input type="text" value="${m.bg}" oninput="data[${i}].bg=this.value; upd()">
+                ${sHtml}
+                <button class="btn-add" onclick="addS(${i})">+ Вопрос</button>
+            </div>`;
+        });
+    }
+
+    function buildHTML(isExport = false) {
+        const char = document.getElementById('cfg-char').value;
+        const map = document.getElementById('cfg-map').value;
+        const title = document.getElementById('cfg-title').value;
+        const sTxt = document.getElementById('cfg-start-text').value;
+        const wTxt = document.getElementById('cfg-win-text').value;
+        const mTh = document.getElementById('cfg-map-thought').value;
+        const startVisible = (isExport || previewMode === 'play') ? 'flex' : 'none';
+
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"><\/script>
+    <style>
+        @keyframes pulse { 0%, 100% {transform:scale(1);} 50% {transform:scale(1.05);} }
+        @keyframes shake { 0%, 100% {transform:translateX(0);} 25% {transform:translateX(-8px);} 75% {transform:translateX(8px);} }
+        body, html { margin:0; padding:0; height:100%; overflow:hidden; font-family:sans-serif; background:#000; }
+        
+        #start-scr { position:fixed; inset:0; z-index:9000; background:url('${map}') center/cover; display:${startVisible}; align-items:center; justify-content:center; flex-direction:column; }
+        #start-scr::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,0.4); }
+        #btn-start { position:relative; z-index:2; background:#ffcc00; border:none; padding:15px 50px; font-size:22px; font-weight:bold; border-radius:15px; cursor:pointer; animation: pulse 2s infinite; }
+
+        #hud { position:fixed; top:15px; left:50%; transform:translateX(-50%); z-index:5000; background:white; padding:8px 20px; border-radius:50px; display:${startVisible === 'none' ? 'flex' : 'none'}; align-items:center; gap:15px; border:3px solid #ffcc00; }
+        #map { width:100vw; height:100vh; background:url('${map}') center/cover; position:relative; }
+        .m-ico { position:absolute; width:50px; height:50px; transform:translate(-50%,-50%); cursor:pointer; background:white; border:3px solid #ffcc00; border-radius:50%; padding:5px; z-index:10; }
+
+        #game { position:fixed; inset:0; z-index:3000; display:none; background-size:cover; background-position:center; align-items:center; justify-content:center; }
+        #game::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,0.6); z-index:1; }
+        .card { background:white; padding:25px; border-radius:25px; text-align:center; width:340px; position:relative; z-index:2; box-shadow:0 10px 30px #000; }
+        .card.error { animation: shake 0.3s; border: 4px solid #aa151b; }
+        .opt { display:block; width:100%; padding:12px; margin:8px 0; border:2px solid #ddd; border-radius:12px; cursor:pointer; font-weight:bold; background:white; font-family:inherit; }
+
+        #person-box { position:fixed; bottom:0; left:20px; z-index:9500; display:flex; flex-direction:column; align-items:center; }
+        #bubble { background:white; color:#333; padding:12px 18px; border-radius:20px; margin-bottom:12px; font-weight:bold; position:relative; box-shadow:0 4px 15px rgba(0,0,0,0.3); text-align:center; max-width:230px; }
+        #bubble::after { content:''; position:absolute; bottom:-10px; left:50%; border-left:10px solid transparent; border-right:10px solid transparent; border-top:10px solid white; transform:translateX(-50%); }
+        #person-img { width:220px; }
+        
+        #win-scr { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; }
+        #fb { display:none; position:absolute; inset:0; background:white; border-radius:25px; z-index:100; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+    </style>
+</head>
+<body>
+    <div id="start-scr">
+        <h1 style="position:relative; z-index:2; color:white; font-size:40px; text-shadow:2px 2px 10px #000;">${title}</h1>
+        <button id="btn-start" onclick="begin()">EMPEZAR</button>
+    </div>
+
+    <div id="hud">
+        <div style="font-weight:bold; font-size:12px">Progreso</div>
+        <div style="width:100px; height:10px; background:#eee; border-radius:10px;"><div id="bar-f" style="height:100%; width:0%; background:#aa151b; transition:0.5s;"></div></div>
+    </div>
+
+    <div id="map"></div>
+    
+    <div id="person-box">
+        <div id="bubble">${startVisible === 'flex' ? sTxt : mTh}</div>
+        <img id="person-img" src="${char}">
+    </div>
+
+    <div id="game">
+        <div id="card" class="card">
+            <div id="sub-prog" style="font-size:11px; color:#999; margin-bottom:5px;"></div>
+            <div id="q-area"></div>
+            <div id="fb">
+                <h2 style="margin:0; color:#27ae60">¡Muy Bien!</h2>
+                <p id="fb-m"></p>
+                <button id="fb-b" class="opt" style="background:#aa151b; color:white">SIGUIENTE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-scr">
+        <div class="card" style="width:400px">
+            <h2>¡VICTORIA!</h2>
+            <p>${wTxt}</p>
+            <button class="opt" style="background:#ffcc00" onclick="location.reload()">JUGAR OTRA VEZ</button>
+        </div>
+    </div>
+
+    <script>
+        const config = { locs: ${JSON.stringify(data)} };
+        let curM = null, curSIdx = 0;
+
+        function begin() {
+            document.getElementById('start-scr').style.display = 'none';
+            document.getElementById('hud').style.display = 'flex';
+            document.getElementById('bubble').innerText = "${mTh}";
+            initMap();
+        }
+
+        function initMap() {
+            const mD = document.getElementById('map'); mD.innerHTML = '';
+            config.locs.forEach(l => {
+                const img = document.createElement('img');
+                img.src = l.done ? 'https://cdn-icons-png.flaticon.com/512/190/190411.png' : l.icon; 
+                img.className = 'm-ico'; img.style.left = l.x+'%'; img.style.top = l.y+'%';
+                img.onclick = () => { if(!l.done) startM(l); };
+                mD.appendChild(img);
+            });
+        }
+
+        function startM(l) {
+            curM = l; curSIdx = 0; 
+            document.getElementById('bubble').innerText = l.thought;
+            showQ();
+        }
+
+        function showQ() {
+            const s = curM.subs[curSIdx];
+            const g = document.getElementById('game');
+            g.style.display = 'flex';
+            g.style.backgroundImage = \`url('\${s.bg || curM.bg || ""}')\`;
+            document.getElementById('fb').style.display = 'none';
+            document.getElementById('sub-prog').innerText = \`\${curM.name}: \${curSIdx+1} / \${curM.subs.length}\`;
+            document.getElementById('q-area').innerHTML = '<h3 style="margin-top:0">'+s.title+'</h3><p style="font-size:17px">'+s.q+'</p>' + 
+                s.opts.map((o,i) => '<button class="opt" onclick="check('+i+')">'+o+'</button>').join('');
+        }
+
+        window.check = (idx) => {
+            const s = curM.subs[curSIdx], card = document.getElementById('card');
+            if(idx === s.corr) {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 9999 });
+                document.getElementById('fb').style.display = 'flex';
+                document.getElementById('fb-m').innerText = s.ok;
+                document.getElementById('fb-b').onclick = () => {
+                    curSIdx++;
+                    if(curSIdx >= curM.subs.length) { 
+                        curM.done = true; document.getElementById('game').style.display='none'; 
+                        document.getElementById('bubble').innerText = "${mTh}";
+                        initMap(); updateP(); checkVictory(); 
+                    } else { showQ(); }
+                };
+            } else {
+                card.classList.add('error');
+                setTimeout(() => card.classList.remove('error'), 300);
+            }
+        }
+
+        function updateP() {
+            const done = config.locs.filter(l => l.done).length;
+            document.getElementById('bar-f').style.width = Math.round(done/config.locs.length*100)+'%';
+        }
+
+        function checkVictory() {
+            if(config.locs.every(l => l.done)) {
+                confetti({ particleCount: 300, spread: 100, origin: { y: 0.4 }, zIndex: 9999 });
+                document.getElementById('win-scr').style.display = 'flex';
+                document.getElementById('bubble').innerText = "${wTxt}";
+            }
+        }
+        if("${startVisible}" === "none") initMap();
+    <\/script>
+</body>
+</html>`;
+    }
+
+    function upd() { document.getElementById('pre').srcdoc = buildHTML(); }
+    function gen() { 
+        const code = buildHTML(true);
+        document.getElementById('out-code').value = `<iframe srcdoc="${code.replace(/"/g, '&quot;')}" width="100%" height="600" style="border:none;" allow="autoplay; fullscreen"></iframe>`;
+    }
+    render(); upd();
+</script>
+</body>
+</html>
