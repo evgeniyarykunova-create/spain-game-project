@@ -3,148 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <title>Редактор игры "Будни эмигранта"</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Nunito:wght@400;700&display=swap');
-
         :root { --red: #aa151b; --gold: #ffcc00; --dark: #0a0a0f; --panel: #1e1e2e; }
         body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        body.lang-ru .en { display: none !important; }
-        body.lang-en .ru { display: none !important; }
-
-        .sidebar { width: 650px; background: var(--panel); padding: 25px; overflow-y: auto; border-right: 3px solid var(--gold); box-sizing: border-box; }
+        .sidebar { width: 480px; background: var(--panel); padding: 20px; overflow-y: auto; border-right: 3px solid var(--gold); }
+        .section { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid var(--red); }
+        .m-card { background: #2a2a45; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444; }
+        .s-card { background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid #666; }
         
-        h1.main-title { font-size: 32px; font-weight: 800; text-align: center; margin: 0 0 25px 0; background: linear-gradient(90deg, #ffcc00, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 1px; }
+        .opt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .opt-row input[type="radio"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--gold); }
 
-        .top-bar { display: flex; gap: 15px; margin-bottom: 25px; }
-        .top-bar select { flex: 1; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 10px; background: #2a2a45; color: white; border: 2px solid #444; outline: none; transition: 0.3s; font-family: 'Montserrat', sans-serif; }
-        .top-bar select:hover { border-color: var(--gold); }
+        h2 { font-size: 13px; color: var(--gold); text-transform: uppercase; margin: 0 0 10px 0; }
+        label { display: block; font-size: 10px; opacity: 0.6; margin: 8px 0 3px 0; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #333; background: #000; color: #fff; font-size: 12px; box-sizing: border-box; }
+        
+        .btn-add { background: #2980b9; color: white; border: none; padding: 12px 20px; width: 100%; cursor: pointer; border-radius: 8px; font-weight: bold; margin-top: 10px; font-size: 13px; font-family: inherit; }
+        .btn-gen { background: var(--red); color: white; border: 2px solid var(--gold); padding: 16px; width: 100%; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 10px; margin-top: 20px; font-family: inherit; }
+        
+        /* НОВОЕ: Стили для кнопки копирования */
+        .btn-copy { background: #8e44ad; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; font-size: 13px; font-weight: bold; border-radius: 8px; margin-top: 5px; font-family: inherit; }
+        
+        .del { float: right; color: #ff4d4d; cursor: pointer; font-size: 11px; background: none; border: none; font-family: inherit;}
 
-        .section { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--red); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        .m-card { background: #2a2a45; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #444; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .s-card { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #666; }
-        
-        .opt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .opt-row input[type="radio"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--gold); }
-
-        h2 { font-size: 14px; color: var(--gold); text-transform: uppercase; margin: 0 0 15px 0; letter-spacing: 0.5px; }
-        label { display: block; font-size: 11px; opacity: 0.7; margin: 12px 0 5px 0; text-transform: uppercase; font-weight: 600; }
-        input, select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #111; color: #fff; font-size: 13px; box-sizing: border-box; transition: 0.3s; font-family: inherit; }
-        input:focus, select:focus, textarea:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 8px rgba(255,204,0,0.2); }
-        input[type="file"] { font-size: 11px; padding: 8px; background: #222; margin-top: 5px; cursor: pointer; }
-        
-        .btn-add { background: linear-gradient(135deg, #2980b9, #2c3e50); color: white; border: none; padding: 15px; width: 100%; cursor: pointer; border-radius: 10px; font-weight: 700; font-size: 14px; margin-top: 10px; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); filter: brightness(1.1); }
-        
-        .btn-gen { background: linear-gradient(135deg, var(--red), #800000); color: white; border: 2px solid var(--gold); padding: 22px; width: 100%; cursor: pointer; font-size: 18px; font-weight: 800; border-radius: 15px; margin-top: 25px; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 5px 20px rgba(170, 21, 27, 0.4); }
-        .btn-gen:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(170, 21, 27, 0.6); }
-        
-        .del { float: right; color: #ff4d4d; cursor: pointer; font-size: 12px; font-weight: bold; background: none; border: none; transition: 0.3s; }
-        .del:hover { color: #ff1a1a; transform: scale(1.1); }
-
-        .preview-cont { flex-grow: 1; display: flex; flex-direction: column; background: #000; }
-        .pre-nav { background: #111; padding: 15px; display: flex; gap: 15px; border-bottom: 1px solid #333; }
-        .nav-btn { background: #333; color: white; border: none; padding: 15px 25px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.3s; text-transform: uppercase; }
-        .nav-btn:hover { background: #444; }
-        .nav-btn.active { background: var(--gold); color: black; box-shadow: 0 0 15px rgba(255, 204, 0, 0.4); }
+        .preview-cont { flex-grow: 1; display: flex; flex-direction: column; }
+        .pre-nav { background: #111; padding: 10px; display: flex; gap: 10px; border-bottom: 1px solid #333; }
+        .nav-btn { background: #333; color: white; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; }
+        .nav-btn.active { background: var(--gold); color: black; font-weight: bold; }
         iframe { width: 100%; flex-grow: 1; border: none; background: #000; }
-        #out-code { width: 100%; height: 80px; background: #000; color: #0f0; font-family: monospace; font-size: 11px; margin-top: 15px; border-radius: 8px; }
+        #out-code { width: 100%; height: 50px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; margin-top: 10px; font-family: 'Segoe UI', sans-serif !important; }
+
+        .editor-title { text-align: center; color: var(--gold); font-size: 24px; font-weight: bold; margin: 10px 0 20px 0; text-transform: uppercase; border-bottom: 1px solid var(--red); padding-bottom: 10px; }
+
+        .task-type-container { display: flex; gap: 5px; margin-bottom: 10px; }
+        .task-type-btn { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; font-size: 11px; font-family: inherit; cursor: pointer; flex-shrink: 0; }
+        .task-type-select { display: none; background: #444; color: white; border-radius: 5px; font-size: 11px; padding: 5px; font-family: inherit; }
+        
+        .lang-selector { position: fixed; top: 10px; right: 20px; z-index: 1000; }
+        .lang-select { background: rgba(255,255,255,0.1); color: white; border: 1px solid #777; border-radius: 4px; padding: 5px; font-size: 12px; font-family: inherit; }
+        .lang-select option { background: #2a2a45; color: white; }
     </style>
 </head>
-<body class="lang-ru">
+<body>
+
+<div class="lang-selector">
+    <select class="lang-select" onchange="window.langManager.setLang(this.value)">
+        <option value="ru">RU</option>
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+    </select>
+</div>
 
 <div class="sidebar">
-    <h1 class="main-title"><span class="ru">Редактор квеста</span><span class="en">Quest Editor</span></h1>
-
-    <div class="top-bar">
-        <select id="ui-lang" onchange="changeLang(this.value)">
-            <option value="ru">🇷🇺 Интерфейс: Русский</option>
-            <option value="en">🇬🇧 Interface: English</option>
-        </select>
-        <select id="game-font" onchange="upd()">
-            <option value="'Montserrat', sans-serif">Шрифт: Montserrat</option>
-            <option value="'Nunito', sans-serif">Шрифт: Nunito</option>
-            <option value="'Comic Sans MS', cursive">Шрифт: Comic Sans</option>
-            <option value="sans-serif">Шрифт: Стандартный</option>
-        </select>
-    </div>
-
+    <h1 class="editor-title" lang-key="title">Редактор квеста от EspaМания</h1>
+    
     <div class="section">
-        <h2><span class="ru">🏠 Начальный и Финальный экраны</span><span class="en">🏠 Start & Final Screens</span></h2>
-        
-        <label><span class="ru">Заголовок игры</span><span class="en">Game Title</span></label>
+        <h2>🏠 <span lang-key="screens">Начальный и Финальный экраны</span></h2>
+        <label lang-key="game_title">Заголовок игры</label>
         <input type="text" id="cfg-title" value="¡Vivir en España!" oninput="upd()">
-        
-        <label><span class="ru">Текст в облачке (Старт)</span><span class="en">Bubble Text (Start)</span></label>
+        <label lang-key="start_text">Текст в облачке (Старт)</label>
         <textarea id="cfg-start-text" oninput="upd()">Hola. Es mi primer mes en España. Ayúdame a resolver todos mis problemas.</textarea>
-        
-        <label><span class="ru">Текст в облачке (Победа)</span><span class="en">Bubble Text (Win)</span></label>
+        <label lang-key="win_text">Текст в облачке (Победа)</label>
         <textarea id="cfg-win-text" oninput="upd()">¡ENHORABUENA! Has completado todas las misiones. ¡Ahora estás listo!</textarea>
         
-        <label><span class="ru">Персонаж (Файл)</span><span class="en">Character (File)</span></label>
-        <input type="file" accept="image/*" onchange="encodeFile(this, 'cfg-char')">
-        <input type="hidden" id="cfg-char" value="">
-        
-        <label><span class="ru">Карта (Файл)</span><span class="en">Map (File)</span></label>
-        <input type="file" accept="image/*" onchange="encodeFile(this, 'cfg-map')">
-        <input type="hidden" id="cfg-map" value="">
-        
-        <label><span class="ru">Мысли на карте</span><span class="en">Map Thoughts</span></label>
+        <label lang-key="char_url">Персонаж (URL)</label>
+        <input type="text" id="cfg-char" value="https://files.catbox.moe/f07un0.png" oninput="upd()">
+        <label lang-key="map_url">Карта (URL)</label>
+        <input type="text" id="cfg-map" value="https://files.catbox.moe/7h98v9.png" oninput="upd()">
+        <label lang-key="map_thought">Мысли на карте</label>
         <input type="text" id="cfg-map-thought" value="¿A dónde iremos hoy?" oninput="upd()">
     </div>
 
     <div id="m-list"></div>
-    <button class="btn-add" style="background: linear-gradient(135deg, #27ae60, #2ecc71)" onclick="addM()">
-        <span class="ru">+ Добавить Здание</span><span class="en">+ Add Building</span>
-    </button>
-    
-    <button class="btn-gen" onclick="gen()">
-        <span class="ru">СГЕНЕРИРОВАТЬ КОД</span><span class="en">GENERATE CODE</span>
-    </button>
+    <button class="btn-add" style="background:#27ae60" onclick="addM()" lang-key="add_building">+ Добавить Здание</button>
+    <button class="btn-gen" onclick="gen()" lang-key="gen_code">СГЕНЕРИРОВАТЬ КОД</button>
     <textarea id="out-code" readonly></textarea>
+    <button id="btn-copy" class="btn-copy" onclick="copyCode()" lang-key="copy_code">СКОПИРОВАТЬ КОД</button>
 </div>
 
 <div class="preview-cont">
     <div class="pre-nav">
-        <button id="btn-edit-mode" class="nav-btn active" onclick="setMode('edit')">
-            <span class="ru">РЕЖИМ РЕДАКТИРОВАНИЯ (Карта)</span><span class="en">EDIT MODE (Map)</span>
-        </button>
-        <button id="btn-play-mode" class="nav-btn" onclick="setMode('play')">
-            <span class="ru">ТЕСТ С НАЧАЛА (Кнопка старт)</span><span class="en">PLAY MODE (Start button)</span>
-        </button>
+        <button id="btn-edit-mode" class="nav-btn active" onclick="setMode('edit')" lang-key="edit_mode">РЕЖИМ РЕДАКТИРОВАНИЯ (Карта)</button>
+        <button id="btn-play-mode" class="nav-btn" onclick="setMode('play')" lang-key="play_test">ТЕСТ С НАЧАЛА (Кнопка старт)</button>
     </div>
     <iframe id="pre"></iframe>
 </div>
 
 <script>
-    let previewMode = 'edit';
-    let curLang = 'ru';
+    window.translations = {
+        ru: {
+            title: "Редактор квеста от EspaМания",
+            screens: "Начальный и Финальный экраны",
+            game_title: "Заголовок игры",
+            start_text: "Текст в облачке (Старт)",
+            win_text: "Текст в облачке (Победа)",
+            char_url: "Персонаж (URL)",
+            map_url: "Карта (URL)",
+            map_thought: "Мысли на карте",
+            add_building: "+ Добавить Здание",
+            gen_code: "СГЕНЕРИРОВАТЬ КОД",
+            copy_code: "СКОПИРОВАТЬ КОД", // НОВОЕ
+            edit_mode: "РЕЖИМ РЕДАКТИРОВАНИЯ (Карта)",
+            play_test: "ТЕСТ С НАЧАЛА (Кнопка старт)",
+            task_title: "Заголовок",
+            add_question: "+ Вопрос",
+            task_type: "Тип задания",
+            quiz: "Квиз: Выбор одного или нескольких правильных ответов",
+            truefalse: "Альтернативный ответ: Выбор из двух вариантов (да/нет)",
+            match: "На соответствие: Требуется сопоставить элементы",
+            sequence: "На последовательность: Расстановка в правильном порядке",
+            del_miss: "Удалить миссию",
+            sub_thought: "Мысли персонажа (в этом задании)",
+            miss_fb: "Обратная связь (Миссия)",
+            task_fb: "Обратная связь (Задание)"
+        },
+        en: {
+            title: "Quest Editor by EspaMania",
+            screens: "Start and Final Screens",
+            game_title: "Game Title",
+            start_text: "Bubble Text (Start)",
+            win_text: "Bubble Text (Win)",
+            char_url: "Character (URL)",
+            map_url: "Map (URL)",
+            map_thought: "Map Thoughts",
+            add_building: "+ Add Building",
+            gen_code: "GENERATE CODE",
+            copy_code: "COPY CODE", // НОВОЕ
+            edit_mode: "EDIT MODE (Map)",
+            play_test: "PLAY TEST (Start Button)",
+            task_title: "Title",
+            add_question: "+ Question",
+            task_type: "Task Type",
+            quiz: "Quiz: Single or Multiple correct choices",
+            truefalse: "Alternative Answer: Two options (Yes/No)",
+            match: "Matching: Match elements from lists",
+            sequence: "Sequence: Arrange elements in correct order",
+            del_miss: "Delete Mission",
+            sub_thought: "Character's thought (for this task)",
+            miss_fb: "Feedback (Mission)",
+            task_fb: "Feedback (Task)"
+        },
+        es: {
+            title: "Editor de quiz by EspaМания",
+            screens: "Pantallas inicial y final",
+            game_title: "Título del juego",
+            start_text: "Texto del globo (Inicio)",
+            win_text: "Texto del globo (Victoria)",
+            char_url: "Personaje (URL)",
+            map_url: "Mapa (URL)",
+            map_thought: "Pensamientos del mapa",
+            add_building: "+ Añadir edificio",
+            gen_code: "GENERAR CÓDIGO",
+            copy_code: "COPIAR CÓDIGO", // НОВОЕ
+            edit_mode: "MODO EDICIÓN (Mapa)",
+            play_test: "TEST (Botón de inicio)",
+            task_title: "Título",
+            add_question: "+ Pregunta",
+            task_type: "Tipo de Tarea",
+            quiz: "Quiz: Una o varias opciones correctas",
+            truefalse: "Respuesta Alternativa: Dos opciones (Sí/No)",
+            match: "Coincidencia: Emparejar elementos de las listas",
+            sequence: "Secuencia: Organizar elementos en el orden correcto",
+            del_miss: "Eliminar Misión",
+            sub_thought: "Pensamiento del personaje (para esta tarea)",
+            miss_fb: "Comentarios (Misión)",
+            task_fb: "Comentarios (Tarea)"
+        }
+    };
 
+    window.langManager = {
+        curLang: 'ru',
+        setLang: function(lang) {
+            this.curLang = lang;
+            this.applyLang();
+            render(); 
+        },
+        applyLang: function() {
+            const keys = document.querySelectorAll('[lang-key]');
+            keys.forEach(el => {
+                const key = el.getAttribute('lang-key');
+                if (window.translations[this.curLang] && window.translations[this.curLang][key]) {
+                    el.innerText = window.translations[this.curLang][key];
+                }
+            });
+        },
+        translate: function(key) {
+             if (window.translations[this.curLang] && window.translations[this.curLang][key]) {
+                return window.translations[this.curLang][key];
+            }
+            return key; 
+        }
+    };
+
+    let previewMode = 'edit';
     let data = [{
         name: "Farmacia", icon: "https://cdn-icons-png.flaticon.com/512/4320/4320337.png", x: 45, y: 40, 
-        bg: "",
+        bg: "https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000",
         thought: "Me duele la cabeza...",
-        missionDoneText: "¡Genial! Ya tengo mi medicina.",
-        subs: [{ type: "quiz", title: "Gripe", q: "¿Qué medicina comprar?", sThought: "No sé qué elegir...", opts: ["Ibuprofeno", "Pan", "Agua"], corr: 0, pairs: [{l:"Dolor", r:"Pastilla"},{l:"Sed", r:"Agua"}], items: ["Paso 1", "Paso 2"], ok: "¡Excelente!", bg: "" }]
+        ok: "¡Misión completada!",
+        subs: [{ title: "Gripe", q: "¿Qué medicina comprar?", taskType: "quiz", opts: ["Ibuprofeno", "Pan", "Agua"], corr: 0, ok: "¡Excelente!", bg: "", thought: "Necesito algo para el dolor." }]
     }];
-
-    function changeLang(lang) {
-        curLang = lang;
-        document.body.className = 'lang-' + lang;
-        render();
-    }
-
-    function encodeFile(input, targetId, callback) {
-        const file = input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onloadend = function() {
-            if(targetId) document.getElementById(targetId).value = reader.result;
-            if(callback) callback(reader.result);
-            upd();
-        }
-        reader.readAsDataURL(file);
-    }
 
     function setMode(m) {
         previewMode = m;
@@ -154,243 +214,372 @@
     }
 
     function addM() {
-        data.push({ name: "Nueva", icon: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png", x: 50, y: 50, bg: "", thought: "...", missionDoneText: "¡Misión cumplida!", subs: [] });
+        data.push({ name: "Nueva", icon: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png", x: 50, y: 50, bg: "", thought: "...", ok: "¡Misión completada!", subs: [] });
         render(); upd();
     }
 
     function addS(i) {
-        data[i].subs.push({ type: "quiz", title: "Task", q: "Question?", sThought: "Hmm...", opts: ["Opt 1", "Opt 2", "Opt 3"], corr: 0, pairs: [{l:"Слева 1", r:"Справа 1"}, {l:"Слева 2", r:"Справа 2"}], items: ["Первое", "Второе", "Третье"], ok: "Perfect!", bg: "" });
+        data[i].subs.push({ title: "Task", q: "Question?", taskType: "quiz", opts: ["Opt 1", "Opt 2", "Opt 3"], corr: 0, ok: "Perfect!", bg: "", thought: "" });
         render(); upd();
     }
 
     function render() {
-        const t = {
-            quiz: curLang === 'ru' ? 'Квиз (Выбор одного из списка)' : 'Quiz (Select one)',
-            alt: curLang === 'ru' ? 'Альтернативный ответ (Два варианта)' : 'Alternative (Two options)',
-            match: curLang === 'ru' ? 'На установление соответствия' : 'Matching',
-            seq: curLang === 'ru' ? 'На установление последовательности' : 'Sequence',
-            taskTitle: curLang === 'ru' ? 'Заголовок задания' : 'Task Title',
-            qText: curLang === 'ru' ? 'Текст вопроса' : 'Question Text',
-            subThought: curLang === 'ru' ? 'Мысли персонажа в ЭТОМ задании' : 'Character thoughts in THIS task',
-            answers: curLang === 'ru' ? 'ВАРИАНТЫ ОТВЕТОВ / ДАННЫЕ' : 'ANSWERS / DATA',
-            fb: curLang === 'ru' ? 'Обратная связь (при верном ответе)' : 'Feedback (on correct answer)',
-            delM: curLang === 'ru' ? 'Удалить миссию' : 'Delete Mission',
-            iconFile: curLang === 'ru' ? 'Иконка здания (Файл)' : 'Building Icon (File)',
-            bgFile: curLang === 'ru' ? 'Фон (Файл)' : 'Background (File)',
-            missionDone: curLang === 'ru' ? 'Текст при завершении миссии' : 'Mission Complete Text',
-            addQ: curLang === 'ru' ? '+ Вопрос' : '+ Question',
-            addPair: curLang === 'ru' ? '+ Добавить пару' : '+ Add pair',
-            addItem: curLang === 'ru' ? '+ Добавить элемент' : '+ Add item',
-            leftPart: curLang === 'ru' ? 'Левая часть' : 'Left part',
-            rightPart: curLang === 'ru' ? 'Правая часть' : 'Right part',
-            ordItem: curLang === 'ru' ? 'Элемент по порядку' : 'Ordered item',
-        };
-
         const cont = document.getElementById('m-list'); cont.innerHTML = '';
         data.forEach((m, i) => {
             let sHtml = m.subs.map((s, si) => {
-                let type = s.type || 'quiz';
-                let sOptsHtml = '';
+                // Базовые данные, если переключили тип задания впервые
+                if (!s.taskType) s.taskType = 'quiz';
+                if (!s.pairs) s.pairs = [{left: 'Мадрид', right: 'Испания'}, {left: 'Париж', right: 'Франция'}];
+                if (!s.seq) s.seq = ['Шаг 1', 'Шаг 2', 'Шаг 3'];
+
+                let typeUI = '';
                 
-                if(type === 'quiz' || type === 'alt') {
-                    let limit = type === 'alt' ? 2 : 3;
-                    sOptsHtml = [0,1,2].slice(0,limit).map(num => `
+                // РЕНДЕР ИНТЕРФЕЙСА В ЗАВИСИМОСТИ ОТ ТИПА ЗАДАНИЯ
+                if (s.taskType === 'quiz') {
+                    typeUI = [0,1,2].map(num => `
                         <div class="opt-row">
                             <input type="radio" name="corr_${i}_${si}" ${s.corr === num ? 'checked' : ''} onchange="data[${i}].subs[${si}].corr=${num}; upd()">
                             <input type="text" value="${s.opts[num] || ''}" oninput="data[${i}].subs[${si}].opts[${num}]=this.value; upd()">
                         </div>`).join('');
-                } else if(type === 'match') {
-                    sOptsHtml = (s.pairs||[]).map((p, pidx) => `
+                } else if (s.taskType === 'truefalse') {
+                    typeUI = [0,1].map(num => `
                         <div class="opt-row">
-                            <button class="del" style="float:none; color:white; background:#aa151b; padding:8px; border-radius:5px" onclick="data[${i}].subs[${si}].pairs.splice(${pidx},1); render(); upd()">X</button>
-                            <input type="text" value="${p.l}" oninput="data[${i}].subs[${si}].pairs[${pidx}].l=this.value; upd()" placeholder="${t.leftPart}">
-                            <input type="text" value="${p.r}" oninput="data[${i}].subs[${si}].pairs[${pidx}].r=this.value; upd()" placeholder="${t.rightPart}">
-                        </div>`).join('') + `<button class="btn-add" style="background:#555; padding:10px; margin-top:10px;" onclick="if(!data[${i}].subs[${si}].pairs) data[${i}].subs[${si}].pairs=[]; data[${i}].subs[${si}].pairs.push({l:'',r:''}); render(); upd()">${t.addPair}</button>`;
-                } else if(type === 'seq') {
-                    sOptsHtml = (s.items||[]).map((it, itidx) => `
+                            <input type="radio" name="corr_${i}_${si}" ${s.corr === num ? 'checked' : ''} onchange="data[${i}].subs[${si}].corr=${num}; upd()">
+                            <input type="text" value="${s.opts[num] || ''}" oninput="data[${i}].subs[${si}].opts[${num}]=this.value; upd()" placeholder="Вариант ответа">
+                        </div>`).join('');
+                } else if (s.taskType === 'match') {
+                    typeUI = s.pairs.map((p, pi) => `
                         <div class="opt-row">
-                            <button class="del" style="float:none; color:white; background:#aa151b; padding:8px; border-radius:5px" onclick="data[${i}].subs[${si}].items.splice(${itidx},1); render(); upd()">X</button>
-                            <span style="font-size:12px; font-weight:bold; color:var(--gold)">${itidx+1}.</span>
-                            <input type="text" value="${it}" oninput="data[${i}].subs[${si}].items[${itidx}]=this.value; upd()" placeholder="${t.ordItem}">
-                        </div>`).join('') + `<button class="btn-add" style="background:#555; padding:10px; margin-top:10px;" onclick="if(!data[${i}].subs[${si}].items) data[${i}].subs[${si}].items=[]; data[${i}].subs[${si}].items.push(''); render(); upd()">${t.addItem}</button>`;
+                            <input type="text" value="${p.left}" oninput="data[${i}].subs[${si}].pairs[${pi}].left=this.value; upd()" placeholder="Слева">
+                            <input type="text" value="${p.right}" oninput="data[${i}].subs[${si}].pairs[${pi}].right=this.value; upd()" placeholder="Справа">
+                            <button class="del" onclick="data[${i}].subs[${si}].pairs.splice(${pi},1); render(); upd()">X</button>
+                        </div>`).join('') + `<button class="btn-add" style="margin-top:5px; padding:5px; font-size:11px; background:#444" onclick="data[${i}].subs[${si}].pairs.push({left:'', right:''}); render(); upd()">+ Добавить пару</button>`;
+                } else if (s.taskType === 'sequence') {
+                    typeUI = s.seq.map((seqItem, si_idx) => `
+                        <div class="opt-row">
+                            <span style="font-size:12px; font-weight:bold; width:20px;">${si_idx+1}.</span>
+                            <input type="text" value="${seqItem}" oninput="data[${i}].subs[${si}].seq[${si_idx}]=this.value; upd()" placeholder="Элемент порядка">
+                            <button class="del" onclick="data[${i}].subs[${si}].seq.splice(${si_idx},1); render(); upd()">X</button>
+                        </div>`).join('') + `<button class="btn-add" style="margin-top:5px; padding:5px; font-size:11px; background:#444" onclick="data[${i}].subs[${si}].seq.push(''); render(); upd()">+ Добавить шаг</button>`;
                 }
 
                 return `
                 <div class="s-card">
                     <button class="del" onclick="data[${i}].subs.splice(${si},1); render(); upd()">[X]</button>
-                    <select onchange="data[${i}].subs[${si}].type=this.value; render(); upd()" style="margin-bottom:12px; font-weight:bold; color:var(--gold); border-color: var(--gold);">
-                        <option value="quiz" ${type==='quiz'?'selected':''}>${t.quiz}</option>
-                        <option value="alt" ${type==='alt'?'selected':''}>${t.alt}</option>
-                        <option value="match" ${type==='match'?'selected':''}>${t.match}</option>
-                        <option value="seq" ${type==='seq'?'selected':''}>${t.seq}</option>
-                    </select>
-                    <input type="text" value="${s.title}" oninput="data[${i}].subs[${si}].title=this.value; upd()" placeholder="${t.taskTitle}" style="margin-bottom:10px">
-                    <textarea oninput="data[${i}].subs[${si}].q=this.value; upd()" placeholder="${t.qText}" style="margin-bottom:10px">${s.q}</textarea>
                     
-                    <label style="color:#5dade2">${t.subThought}</label>
-                    <input type="text" value="${s.sThought || ''}" oninput="data[${i}].subs[${si}].sThought=this.value; upd()" placeholder="...">
-
-                    <label style="color:var(--gold)">${t.answers}</label>
-                    <div style="background:rgba(0,0,0,0.5); padding:12px; border-radius:8px; margin-bottom:12px; border: 1px solid #333;">
-                        ${sOptsHtml}
+                    <div class="task-type-container">
+                        <button class="task-type-btn" onclick="toggleTypeSelect(this)" lang-key="task_type">${window.langManager.translate('task_type')}</button>
+                        <select class="task-type-select" onchange="data[${i}].subs[${si}].taskType = this.value; render(); upd()">
+                            <option value="quiz" lang-key="quiz" ${s.taskType === 'quiz' ? 'selected' : ''}>${window.langManager.translate('quiz')}</option>
+                            <option value="truefalse" lang-key="truefalse" ${s.taskType === 'truefalse' ? 'selected' : ''}>${window.langManager.translate('truefalse')}</option>
+                            <option value="match" lang-key="match" ${s.taskType === 'match' ? 'selected' : ''}>${window.langManager.translate('match')}</option>
+                            <option value="sequence" lang-key="sequence" ${s.taskType === 'sequence' ? 'selected' : ''}>${window.langManager.translate('sequence')}</option>
+                        </select>
                     </div>
 
-                    <label>${t.fb}</label>
-                    <input type="text" value="${s.ok}" oninput="data[${i}].subs[${si}].ok=this.value; upd()">
-                </div>`;
+                    <input type="text" value="${s.title}" oninput="data[${i}].subs[${si}].title=this.value; upd()" placeholder="Заголовок">
+                    <textarea oninput="data[${i}].subs[${si}].q=this.value; upd()">${s.q}</textarea>
+                    
+                    <label lang-key="sub_thought">${window.langManager.translate('sub_thought')}</label>
+                    <input type="text" value="${s.thought || ''}" oninput="data[${i}].subs[${si}].thought=this.value; upd()">
+
+                    <label lang-key="task_fb">${window.langManager.translate('task_fb')}</label>
+                    <input type="text" value="${s.ok || ''}" oninput="data[${i}].subs[${si}].ok=this.value; upd()">
+
+                    ${typeUI}
+                </div>`
             }).join('');
 
             cont.innerHTML += `<div class="m-card">
-                <button class="del" onclick="data.splice(${i},1); render(); upd()">${t.delM}</button>
-                <div style="display:flex; gap:10px; margin-bottom:10px"><input type="text" value="${m.name}" oninput="data[${i}].name=this.value; upd()" style="font-weight:bold; font-size:15px"></div>
-                
-                <label>${t.iconFile}</label>
-                <input type="file" accept="image/*" onchange="encodeFile(this, null, (res)=> { data[${i}].icon=res; render(); })">
-                <div style="display:flex; gap:10px; margin-top:10px"><input type="number" value="${m.x}" oninput="data[${i}].x=this.value; upd()"><input type="number" value="${m.y}" oninput="data[${i}].y=this.value; upd()"></div>
-                
-                <label>${t.bgFile}</label>
-                <input type="file" accept="image/*" onchange="encodeFile(this, null, (res)=> { data[${i}].bg=res; upd(); })">
-                
-                <label>${t.missionDone}</label>
-                <input type="text" value="${m.missionDoneText}" oninput="data[${i}].missionDoneText=this.value; upd()">
-                
+                <button class="del" onclick="data.splice(${i},1); render(); upd()" lang-key="del_miss">${window.langManager.translate('del_miss')}</button>
+                <div style="display:flex; gap:5px;"><input type="text" value="${m.name}" oninput="data[${i}].name=this.value; upd()"><input type="text" value="${m.icon}" oninput="data[${i}].icon=this.value; upd()"></div>
+                <div style="display:flex; gap:5px; margin-top:5px"><input type="number" value="${m.x}" oninput="data[${i}].x=this.value; upd()"><input type="number" value="${m.y}" oninput="data[${i}].y=this.value; upd()"></div>
+                <label>Фон (Full Screen URL)</label>
+                <input type="text" value="${m.bg}" oninput="data[${i}].bg=this.value; upd()">
+                <label lang-key="miss_fb">${window.langManager.translate('miss_fb')}</label>
+                <input type="text" value="${m.ok || ''}" oninput="data[${i}].ok=this.value; upd()">
                 ${sHtml}
-                <button class="btn-add" onclick="addS(${i})">${t.addQ}</button>
+                <button class="btn-add" onclick="addS(${i})" lang-key="add_question">${window.langManager.translate('add_question')}</button>
             </div>`;
         });
+        window.langManager.applyLang();
+    }
+
+    function toggleTypeSelect(btn) {
+        const select = btn.nextElementSibling;
+        select.style.display = select.style.display === 'block' ? 'none' : 'block';
     }
 
     function buildHTML(isExport = false) {
-        const char = document.getElementById('cfg-char').value || 'https://files.catbox.moe/f07un0.png';
-        const map = document.getElementById('cfg-map').value || 'https://files.catbox.moe/7h98v9.png';
+        const char = document.getElementById('cfg-char').value;
+        const map = document.getElementById('cfg-map').value;
         const title = document.getElementById('cfg-title').value;
         const sTxt = document.getElementById('cfg-start-text').value;
         const wTxt = document.getElementById('cfg-win-text').value;
         const mTh = document.getElementById('cfg-map-thought').value;
-        const gameFont = document.getElementById('game-font').value;
         const startVisible = (isExport || previewMode === 'play') ? 'flex' : 'none';
 
-        const gameHtml = `
+        return `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"><\/script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Nunito:wght@400;700&display=swap');
         @keyframes pulse { 0%, 100% {transform:scale(1);} 50% {transform:scale(1.05);} }
         @keyframes shake { 0%, 100% {transform:translateX(0);} 25% {transform:translateX(-8px);} 75% {transform:translateX(8px);} }
-        body, html { margin:0; padding:0; height:100%; overflow:hidden; font-family:${gameFont}; background:#000; }
+        body, html { margin:0; padding:0; height:100%; overflow:hidden; font-family:sans-serif; background:#000; }
+        
         #start-scr { position:fixed; inset:0; z-index:9000; background:url('${map}') center/cover; display:${startVisible}; align-items:center; justify-content:center; flex-direction:column; }
         #start-scr::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,0.4); }
-        #btn-start { position:relative; z-index:2; background:#ffcc00; border:none; padding:15px 50px; font-size:22px; font-family:inherit; font-weight:bold; border-radius:15px; cursor:pointer; animation: pulse 2s infinite; }
+        #btn-start { position:relative; z-index:2; background:#ffcc00; border:none; padding:15px 50px; font-size:22px; font-weight:bold; border-radius:15px; cursor:pointer; animation: pulse 2s infinite; }
+
         #hud { position:fixed; top:15px; left:50%; transform:translateX(-50%); z-index:5000; background:white; padding:8px 20px; border-radius:50px; display:${startVisible === 'none' ? 'flex' : 'none'}; align-items:center; gap:15px; border:3px solid #ffcc00; }
         #map { width:100vw; height:100vh; background:url('${map}') center/cover; position:relative; }
-        .m-ico { position:absolute; width:50px; height:50px; transform:translate(-50%,-50%); cursor:pointer; background:white; border:3px solid #ffcc00; border-radius:50%; padding:5px; z-index:10; transition: transform 0.2s; }
-        .m-ico:hover { transform: translate(-50%,-50%) scale(1.1); }
+        .m-ico { position:absolute; width:50px; height:50px; transform:translate(-50%,-50%); cursor:pointer; background:white; border:3px solid #ffcc00; border-radius:50%; padding:5px; z-index:10; }
+
         #game { position:fixed; inset:0; z-index:3000; display:none; background-size:cover; background-position:center; align-items:center; justify-content:center; }
         #game::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,0.6); z-index:1; }
-        .card { background:white; padding:30px; border-radius:25px; text-align:center; width:360px; position:relative; z-index:2; box-shadow:0 10px 40px rgba(0,0,0,0.5); max-height: 85vh; overflow-y:auto; }
+        .card { background:white; padding:25px; border-radius:25px; text-align:center; width:340px; position:relative; z-index:2; box-shadow:0 10px 30px #000; }
         .card.error { animation: shake 0.3s; border: 4px solid #aa151b; }
-        .opt { display:block; width:100%; padding:14px; margin:10px 0; border:2px solid #ddd; border-radius:12px; cursor:pointer; font-weight:bold; font-size:15px; background:white; font-family:inherit; transition: 0.2s; }
-        .opt:hover { background: #f9f9f9; border-color: #bbb; }
+        .opt { display:block; width:100%; padding:12px; margin:8px 0; border:2px solid #ddd; border-radius:12px; cursor:pointer; font-weight:bold; background:white; font-family:inherit; }
+
         #person-box { position:fixed; bottom:0; left:20px; z-index:9500; display:flex; flex-direction:column; align-items:center; }
-        #bubble { background:white; color:#333; padding:15px 20px; border-radius:20px; margin-bottom:15px; font-weight:bold; font-size: 15px; position:relative; box-shadow:0 6px 20px rgba(0,0,0,0.3); text-align:center; max-width:250px; }
-        #bubble::after { content:''; position:absolute; bottom:-10px; left:50%; border-left:12px solid transparent; border-right:12px solid transparent; border-top:12px solid white; transform:translateX(-50%); }
-        #person-img { width:240px; }
+        #bubble { background:white; color:#333; padding:12px 18px; border-radius:20px; margin-bottom:12px; font-weight:bold; position:relative; box-shadow:0 4px 15px rgba(0,0,0,0.3); text-align:center; max-width:230px; }
+        #bubble::after { content:''; position:absolute; bottom:-10px; left:50%; border-left:10px solid transparent; border-right:10px solid transparent; border-top:10px solid white; transform:translateX(-50%); }
+        #person-img { width:220px; }
+        
         #win-scr { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; }
-        #fb { display:none; position:absolute; inset:0; background:white; border-radius:25px; z-index:100; flex-direction:column; align-items:center; justify-content:center; padding:25px; }
+        #fb { display:none; position:absolute; inset:0; background:white; border-radius:25px; z-index:100; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
     </style>
 </head>
 <body>
-    <div id="start-scr"><h1 style="position:relative; z-index:2; color:white; font-size:45px; text-shadow:2px 2px 15px #000; text-align:center">${title}</h1><button id="btn-start" onclick="begin()">EMPEZAR</button></div>
-    <div id="hud"><div style="font-weight:bold; font-size:14px">Progreso</div><div style="width:120px; height:12px; background:#eee; border-radius:10px; overflow:hidden"><div id="bar-f" style="height:100%; width:0%; background:#aa151b; transition:0.5s;"></div></div></div>
+    <div id="start-scr">
+        <h1 style="position:relative; z-index:2; color:white; font-size:40px; text-shadow:2px 2px 10px #000;">${title}</h1>
+        <button id="btn-start" onclick="begin()">EMPEZAR</button>
+    </div>
+
+    <div id="hud">
+        <div style="font-weight:bold; font-size:12px">Progreso</div>
+        <div style="width:100px; height:10px; background:#eee; border-radius:10px;"><div id="bar-f" style="height:100%; width:0%; background:#aa151b; transition:0.5s;"></div></div>
+    </div>
+
     <div id="map"></div>
-    <div id="person-box"><div id="bubble">${startVisible === 'flex' ? sTxt : mTh}</div><img id="person-img" src="${char}"></div>
-    <div id="game"><div id="card" class="card"><div id="sub-prog" style="font-size:13px; color:#999; margin-bottom:10px; font-weight:bold"></div><div id="q-area"></div><div id="fb"><h2 style="margin:0; font-size:24px; color:#27ae60">¡Muy Bien!</h2><p id="fb-m" style="font-size:16px"></p><button id="fb-b" class="opt" style="background:#aa151b; color:white; border:none; margin-top:20px">SIGUIENTE</button></div></div></div>
-    <div id="win-scr"><div class="card" style="width:400px"><h2 style="font-size:30px; margin-top:0">¡VICTORIA!</h2><p style="font-size:18px">${wTxt}</p><button class="opt" style="background:#ffcc00; border:none; margin-top:20px" onclick="location.reload()">JUGAR OTRA VEZ</button></div></div>
+    
+    <div id="person-box">
+        <div id="bubble">${startVisible === 'flex' ? sTxt : mTh}</div>
+        <img id="person-img" src="${char}">
+    </div>
+
+    <div id="game">
+        <div id="card" class="card">
+            <div id="sub-prog" style="font-size:11px; color:#999; margin-bottom:5px;"></div>
+            <div id="q-area"></div>
+            <div id="fb">
+                <h2 style="margin:0; color:#27ae60">¡Muy Bien!</h2>
+                <p id="fb-m"></p>
+                <button id="fb-b" class="opt" style="background:#aa151b; color:white">SIGUIENTE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-scr">
+        <div class="card" style="border: 4px solid #ffcc00; text-align: center;">
+            <h2 style="color: #27ae60; margin-top: 0; font-size: 32px;">🏆</h2>
+            <p style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 0;">${wTxt}</p>
+        </div>
+    </div>
+
     <script>
         const config = { locs: ${JSON.stringify(data)} };
         let curM = null, curSIdx = 0;
-        function begin() { document.getElementById('start-scr').style.display='none'; document.getElementById('hud').style.display='flex'; document.getElementById('bubble').innerText="${mTh}"; initMap(); }
-        function initMap() { const mD=document.getElementById('map'); mD.innerHTML=''; config.locs.forEach(l=>{ const img=document.createElement('img'); img.src=l.done?'https://cdn-icons-png.flaticon.com/512/190/190411.png':l.icon; img.className='m-ico'; img.style.left=l.x+'%'; img.style.top=l.y+'%'; img.onclick=()=>{if(!l.done)startM(l)}; mD.appendChild(img); }); }
-        function startM(l) { curM=l; curSIdx=0; showQ(); }
-        
-        function showQ() { 
-            const s=curM.subs[curSIdx]; const g=document.getElementById('game'); 
-            g.style.display='flex'; g.style.backgroundImage=\`url('\${s.bg||curM.bg||""}')\`; 
-            document.getElementById('fb').style.display='none'; 
-            document.getElementById('sub-prog').innerText=\`\${curM.name}: \${curSIdx+1}/\${curM.subs.length}\`; 
-            
-            // ОБНОВЛЕНИЕ МЫСЛЕЙ ПЕРСОНАЖА
-            document.getElementById('bubble').innerText = s.sThought || curM.thought;
 
-            let h = '<h3 style="margin-top:0; font-size:22px">'+s.title+'</h3><p style="font-size:17px; margin-bottom:20px">'+s.q+'</p>';
-            let type = s.type || 'quiz';
-            
-            if(type === 'quiz' || type === 'alt') {
-                let limit = type === 'alt' ? 2 : 3;
-                h += s.opts.slice(0,limit).map((o,i)=>'<button class="opt" onclick="check('+i+')">'+o+'</button>').join('');
-            } else if (type === 'match') {
-                let rights = s.pairs.map(p=>p.r).sort(()=>Math.random()-0.5);
-                h += s.pairs.map((p,i)=>'<div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0;background:#f1f1f1;padding:10px;border-radius:10px;color:#000;"><div style="width:45%;font-size:14px;font-weight:bold;text-align:left">'+p.l+'</div><select id="match_'+i+'" class="opt" style="width:50%;margin:0;padding:8px;font-size:14px;font-family:inherit"><option value="">Выбрать...</option>'+rights.map(r=>'<option value="'+r.replace(/"/g,'&quot;')+'">'+r+'</option>').join('')+'</select></div>').join('');
-                h += '<button class="opt" style="background:#2980b9;color:white;margin-top:20px;border:none" onclick="checkMatch()">ПРОВЕРИТЬ</button>';
-            } else if (type === 'seq') {
-                window.curSeq = [...s.items].sort(()=>Math.random()-0.5);
-                h += '<div id="seq-cont"></div><button class="opt" style="background:#2980b9;color:white;margin-top:20px;border:none" onclick="checkSeq()">ПРОВЕРИТЬ</button>';
-                setTimeout(()=>{
-                    window.renderSeq = () => {
-                        document.getElementById('seq-cont').innerHTML = window.curSeq.map((it, i) => '<div style="display:flex;align-items:center;margin:8px 0;background:#f1f1f1;color:#000;border-radius:10px;padding:8px;"><button onclick="moveSeq('+i+', -1)" '+(i===0?'disabled':'')+' style="padding:10px;cursor:pointer;background:#ddd;border:none;border-radius:8px;">▲</button><button onclick="moveSeq('+i+', 1)" '+(i===window.curSeq.length-1?'disabled':'')+' style="padding:10px;cursor:pointer;background:#ddd;border:none;border-radius:8px;margin-left:5px">▼</button><div style="flex-grow:1;margin-left:15px;font-weight:bold;text-align:left;font-size:15px">'+it+'</div></div>').join('');
-                    };
-                    window.moveSeq = (idx, dir) => { let t = window.curSeq[idx]; window.curSeq[idx] = window.curSeq[idx+dir]; window.curSeq[idx+dir] = t; window.renderSeq(); };
-                    window.renderSeq();
-                }, 10);
-            }
-            document.getElementById('q-area').innerHTML = h; 
+        function begin() {
+            document.getElementById('start-scr').style.display = 'none';
+            document.getElementById('hud').style.display = 'flex';
+            document.getElementById('bubble').innerText = "${mTh}";
+            initMap();
         }
 
-        window.doSuccess = () => {
+        function initMap() {
+            const mD = document.getElementById('map'); mD.innerHTML = '';
+            config.locs.forEach(l => {
+                const img = document.createElement('img');
+                img.src = l.done ? 'https://cdn-icons-png.flaticon.com/512/190/190411.png' : l.icon; 
+                img.className = 'm-ico'; img.style.left = l.x+'%'; img.style.top = l.y+'%';
+                img.onclick = () => { if(!l.done) startM(l); };
+                mD.appendChild(img);
+            });
+        }
+
+        function startM(l) {
+            curM = l; curSIdx = 0; 
+            document.getElementById('bubble').innerText = l.thought;
+            showQ();
+        }
+
+        function showQ() {
             const s = curM.subs[curSIdx];
-            confetti({particleCount:100,spread:70,origin:{y:0.6},zIndex:9999}); 
-            document.getElementById('fb').style.display='flex'; 
-            document.getElementById('fb-m').innerText=s.ok; 
-            document.getElementById('fb-b').onclick=()=>{ 
-                curSIdx++; 
-                if(curSIdx>=curM.subs.length){ 
-                    curM.done=true; document.getElementById('game').style.display='none'; 
-                    document.getElementById('bubble').innerText=curM.missionDoneText; 
-                    initMap(); updateP(); setTimeout(checkVictory, 1500); 
-                } else { showQ(); } 
-            };
+            const g = document.getElementById('game');
+            g.style.display = 'flex';
+            g.style.backgroundImage = \`url('\${s.bg || curM.bg || ""}')\`;
+            document.getElementById('fb').style.display = 'none';
+            document.getElementById('sub-prog').innerText = \`\${curM.name}: \${curSIdx+1} / \${curM.subs.length}\`;
+            document.getElementById('bubble').innerText = s.thought || curM.thought;
+
+            let type = s.taskType || 'quiz';
+            let html = '<h3 style="margin-top:0">'+s.title+'</h3><p style="font-size:17px">'+s.q+'</p>';
+
+            // ГЕНЕРАЦИЯ ИГРОВОГО ЭКРАНА ПО ТИПУ ЗАДАНИЯ
+            if (type === 'quiz' || type === 'truefalse') {
+                let limit = type === 'truefalse' ? 2 : s.opts.length;
+                for(let i=0; i<limit; i++) {
+                    if(s.opts[i] !== undefined) html += '<button class="opt" onclick="check('+i+')">'+s.opts[i]+'</button>';
+                }
+            } else if (type === 'match') {
+                window.matchState = { sel: null, matched: 0 };
+                let lefts = s.pairs.map((p,i) => ({t: p.left, i: i})).sort(()=>Math.random()-0.5);
+                let rights = s.pairs.map((p,i) => ({t: p.right, i: i})).sort(()=>Math.random()-0.5);
+                html += '<div style="display:flex; gap:10px; justify-content:space-between;">' +
+                    '<div style="width:48%; display:flex; flex-direction:column; gap:5px;">' + lefts.map(l => \`<button class="opt m-btn-l" id="ml-\${l.i}" style="margin:0; padding:10px; font-size:13px" onclick="selMatch('l', \${l.i})">\${l.t}</button>\`).join('') + '</div>' +
+                    '<div style="width:48%; display:flex; flex-direction:column; gap:5px;">' + rights.map(r => \`<button class="opt m-btn-r" id="mr-\${r.i}" style="margin:0; padding:10px; font-size:13px" onclick="selMatch('r', \${r.i})">\${r.t}</button>\`).join('') + '</div>' +
+                    '</div>';
+            } else if (type === 'sequence') {
+                window.seqState = { currentIdx: 0 };
+                let items = s.seq.map((t,i) => ({t: t, i: i})).sort(()=>Math.random()-0.5);
+                html += '<div style="display:flex; flex-direction:column; gap:5px;">' + items.map(item => \`<button class="opt" id="seq-\${item.i}" style="margin:0; padding:10px" onclick="selSeq(\${item.i})">\${item.t}</button>\`).join('') + '</div>';
+            }
+
+            document.getElementById('q-area').innerHTML = html;
+        }
+
+        // ЛОГИКА ИГРЫ ДЛЯ СООТВЕТСТВИЙ
+        window.selMatch = (side, idx) => {
+            let s = curM.subs[curSIdx];
+            if (side === 'l') {
+                document.querySelectorAll('.m-btn-l').forEach(b => b.style.borderColor = '#ddd');
+                document.getElementById('ml-'+idx).style.borderColor = '#ffcc00';
+                window.matchState.sel = idx;
+            } else if (side === 'r' && window.matchState.sel !== null) {
+                if (window.matchState.sel === idx) {
+                    document.getElementById('ml-'+idx).style.visibility = 'hidden';
+                    document.getElementById('mr-'+idx).style.visibility = 'hidden';
+                    window.matchState.sel = null;
+                    window.matchState.matched++;
+                    if (window.matchState.matched === s.pairs.length) window.check(true);
+                } else {
+                    let card = document.getElementById('card');
+                    card.classList.add('error');
+                    setTimeout(() => card.classList.remove('error'), 300);
+                }
+            }
         };
 
-        window.doFail = () => {
-            const card = document.getElementById('card');
-            card.classList.add('error'); 
-            setTimeout(()=>card.classList.remove('error'),300);
+        // ЛОГИКА ИГРЫ ДЛЯ ПОСЛЕДОВАТЕЛЬНОСТИ
+        window.selSeq = (idx) => {
+            let s = curM.subs[curSIdx];
+            if (idx === window.seqState.currentIdx) {
+                document.getElementById('seq-'+idx).style.background = '#27ae60';
+                document.getElementById('seq-'+idx).style.color = '#fff';
+                document.getElementById('seq-'+idx).onclick = null;
+                window.seqState.currentIdx++;
+                if (window.seqState.currentIdx === s.seq.length) window.check(true);
+            } else {
+                let card = document.getElementById('card');
+                card.classList.add('error');
+                setTimeout(() => card.classList.remove('error'), 300);
+            }
         };
 
-        window.check = (idx) => { if(idx === curM.subs[curSIdx].corr) doSuccess(); else doFail(); };
-        window.checkMatch = () => { let ok=true; curM.subs[curSIdx].pairs.forEach((p,i)=>{if(document.getElementById('match_'+i).value!==p.r) ok=false;}); if(ok) doSuccess(); else doFail(); };
-        window.checkSeq = () => { let ok=JSON.stringify(window.curSeq)===JSON.stringify(curM.subs[curSIdx].items); if(ok) doSuccess(); else doFail(); };
+        function finishM() {
+            curM.done = true; 
+            document.getElementById('game').style.display = 'none'; 
+            document.getElementById('bubble').innerText = "${mTh}";
+            initMap(); 
+            updateP(); 
+            checkVictory(); 
+        }
 
-        function updateP() { const done=config.locs.filter(l=>l.done).length; document.getElementById('bar-f').style.width=Math.round(done/config.locs.length*100)+'%'; }
-        function checkVictory() { if(config.locs.every(l=>l.done)){ confetti({particleCount:300,spread:100,origin:{y:0.4},zIndex:9999}); document.getElementById('win-scr').style.display='flex'; document.getElementById('bubble').innerText="${wTxt}"; } }
-        if("${startVisible}"==="none") initMap();
+        window.check = (idx) => {
+            const s = curM.subs[curSIdx], card = document.getElementById('card');
+            let type = s.taskType || 'quiz';
+            let isCorrect = false;
+
+            if (type === 'quiz' || type === 'truefalse') isCorrect = (idx === s.corr);
+            else isCorrect = (idx === true);
+
+            if(isCorrect) {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 9999 });
+                document.getElementById('fb').style.display = 'flex';
+                document.getElementById('fb-m').innerText = s.ok || '¡Excelente!';
+                document.getElementById('fb-b').innerText = 'SIGUIENTE';
+                document.getElementById('fb-b').onclick = () => {
+                    curSIdx++;
+                    if(curSIdx >= curM.subs.length) { 
+                        if(curM.ok && curM.ok.trim() !== "") {
+                            document.getElementById('fb-m').innerText = curM.ok;
+                            document.getElementById('fb-b').innerText = 'FINALIZAR';
+                            document.getElementById('fb-b').onclick = finishM;
+                        } else {
+                            finishM();
+                        }
+                    } else { showQ(); }
+                };
+            } else {
+                card.classList.add('error');
+                setTimeout(() => card.classList.remove('error'), 300);
+            }
+        }
+
+        function updateP() {
+            const done = config.locs.filter(l => l.done).length;
+            document.getElementById('bar-f').style.width = Math.round(done/config.locs.length*100)+'%';
+        }
+
+        function checkVictory() {
+            if(config.locs.every(l => l.done)) {
+                confetti({ particleCount: 300, spread: 100, origin: { y: 0.4 }, zIndex: 9999 });
+                document.getElementById('win-scr').style.display = 'flex';
+            }
+        }
+        if("${startVisible}" === "none") initMap();
     <\/script>
 </body>
 </html>`;
-        return gameHtml;
     }
 
     function upd() { document.getElementById('pre').srcdoc = buildHTML(); }
     
+    // ИСПРАВЛЕНО: закрыл незаконченную строку, которую ты скинул
     function gen() { 
-        const html = buildHTML(true);
-        const encoded = btoa(unescape(encodeURIComponent(html)));
-        document.getElementById('out-code').value = `<iframe src="about:blank" style="width:100%;height:600px;border:none" allow="autoplay;fullscreen" onload="this.contentDocument.open();this.contentDocument.write(decodeURIComponent(escape(atob('${encoded}'))));this.contentDocument.close();"></iframe>`;
+        const code = buildHTML(true);
+        document.getElementById('out-code').value = `<iframe srcdoc="${code.replace(/"/g, '&quot;')}" width="100%" height="600" style="border:none;"></iframe>`;
     }
-    render(); upd();
+    
+    // НОВОЕ: Функция копирования кода с визуальным фидбэком
+    function copyCode() {
+        const outCode = document.getElementById('out-code');
+        if (!outCode.value) return; // Не копируем пустоту
+        
+        navigator.clipboard.writeText(outCode.value).then(() => {
+            const btn = document.getElementById('btn-copy');
+            const originalText = btn.innerText;
+            btn.innerText = "✓"; // Краткий визуальный отклик об успехе
+            setTimeout(() => { btn.innerText = originalText; }, 2000);
+        }).catch(err => {
+            // Фолбэк для старых браузеров
+            outCode.select();
+            document.execCommand('copy');
+            const btn = document.getElementById('btn-copy');
+            const originalText = btn.innerText;
+            btn.innerText = "✓";
+            setTimeout(() => { btn.innerText = originalText; }, 2000);
+        });
+    }
+
+    // Инициализация при старте (если требуется)
+    render();
+    upd();
 </script>
 </body>
 </html>
